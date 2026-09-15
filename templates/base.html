@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER-BOTICS CORP | 2088</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070414;
+            --neon-pink: #ff007f;
+            --neon-purple: #9d00ff;
+            --neon-cyan: #00f3ff;
+            --neon-yellow: #ffe600;
+            --card-bg: rgba(18, 11, 38, 0.9);
+            --border-glow: rgba(255, 0, 127, 0.5);
+            --text-main: #f8fafc;
+            --text-sub: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-dark);
+            background: 
+                radial-gradient(circle at 50% 160px, rgba(255, 0, 127, 0.3) 0%, rgba(157, 0, 255, 0.2) 40%, transparent 75%),
+                linear-gradient(180deg, #070414 0%, #170933 45%, #05020c 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 3rem;
+            background: rgba(12, 7, 26, 0.95);
+            border-bottom: 2px solid var(--neon-pink);
+            box-shadow: 0 4px 25px rgba(255, 0, 127, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo a {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+        .logo span { color: var(--neon-pink); text-shadow: 0 0 12px var(--neon-pink); }
+        .nav a {
+            color: var(--text-sub);
+            text-decoration: none;
+            margin: 0 1.2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .nav a:hover { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
+        .header-status { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); }
+        .status-indicator {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 12px var(--neon-cyan);
+        }
+
+        /* HERO */
+        .hero-section { text-align: center; padding: 4rem 1rem 2rem; }
+        .glitch-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #ffffff;
+            text-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-purple);
+        }
+        .hero-sub {
+            color: #e0e7ff;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin-top: 1rem;
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+        }
+
+        /* METRICS */
+        .metrics-section { max-width: 1300px; margin: 0 auto 2.5rem; padding: 0 2rem; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.8rem; }
+        .metric-card {
+            background: linear-gradient(135deg, rgba(28, 16, 56, 0.9) 0%, rgba(13, 8, 28, 0.95) 100%);
+            border: 1px solid rgba(255, 0, 127, 0.4);
+            border-radius: 8px;
+            padding: 1.6rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+        }
+        .metric-label { font-family: 'Orbitron'; font-size: 0.85rem; color: var(--neon-cyan); letter-spacing: 1px; }
+        .metric-val { font-family: 'Orbitron'; font-size: 2.6rem; font-weight: 900; color: #fff; margin: 0.4rem 0; text-shadow: 0 0 20px var(--neon-cyan); }
+        .metric-desc { color: #cbd5e1; font-size: 0.95rem; }
+        .metric-src { margin-top: 0.6rem; font-size: 0.78rem; color: var(--neon-pink); }
+
+        /* FILTER TABS */
+        .gallery-container { max-width: 1300px; margin: 0 auto; padding: 0 2rem 5rem; }
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 2.5rem; flex-wrap: wrap; }
+        .filter-btn {
+            background: rgba(18, 12, 38, 0.9);
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            color: #e2e8f0;
+            padding: 0.65rem 1.4rem;
+            cursor: pointer;
+            font-family: 'Orbitron';
+            font-size: 0.85rem;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--neon-pink);
+            border-color: var(--neon-pink);
+            color: #fff;
+            box-shadow: 0 0 18px var(--neon-pink);
+        }
+
+        /* CARDS */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2.2rem; }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(157, 0, 255, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            transition: 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 12px 30px rgba(0, 243, 255, 0.3);
+        }
+        .card-img-wrapper { width: 100%; height: 240px; position: relative; overflow: hidden; background: #000; }
+        .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 4, 20, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .card:hover .card-overlay { opacity: 1; }
+        .btn-inspect {
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            font-family: 'Orbitron';
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+        .btn-inspect:hover { background: var(--neon-cyan); color: #000; }
+
+        .card-info { padding: 1.5rem; }
+        .card-top-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .unit-id { color: var(--neon-pink); font-family: 'Orbitron'; font-weight: 700; font-size: 0.85rem; }
+        .category-badge { background: rgba(0, 243, 255, 0.15); color: var(--neon-cyan); border: 1px solid var(--neon-cyan); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-family: 'Orbitron'; }
+        .unit-title { font-family: 'Orbitron'; font-size: 1.3rem; margin: 0.4rem 0; color: #fff; }
+        .unit-dev { color: #a5b4fc; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .unit-brief { color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; }
+        .card-source-tag { margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px dashed rgba(255, 255, 255, 0.2); font-size: 0.75rem; color: var(--neon-cyan); font-family: 'Orbitron'; }
+
+        /* DETAIL PAGE */
+        .detail-container { max-width: 1200px; margin: 3rem auto; padding: 0 2rem; }
+        .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .back-link { color: var(--neon-cyan); text-decoration: none; font-weight: 700; font-family: 'Orbitron'; }
+        .unit-code { color: var(--neon-pink); font-family: 'Orbitron'; font-weight: 700; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; }
+        .detail-visual { border: 2px solid var(--neon-pink); border-radius: 8px; overflow: hidden; height: 440px; box-shadow: 0 0 30px rgba(255, 0, 127, 0.4); }
+        .detail-visual img { width: 100%; height: 100%; object-fit: cover; }
+        .unit-category-tag { color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 0.95rem; }
+        .detail-title { font-family: 'Orbitron'; font-size: 2.4rem; margin: 0.5rem 0 1rem; color: #fff; text-shadow: 0 0 15px var(--neon-cyan); }
+        .detail-desc { color: #e2e8f0; line-height: 1.7; margin-bottom: 1.8rem; font-size: 1.1rem; }
+        .insight-box { background: rgba(255, 0, 127, 0.1); border-left: 3px solid var(--neon-pink); padding: 1.2rem; margin-bottom: 2rem; }
+        .insight-box h4 { font-family: 'Orbitron'; color: var(--neon-pink); font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .insight-box p { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 0.5rem; line-height: 1.5; }
+        .intel-source { font-size: 0.78rem; color: var(--neon-cyan); font-family: 'Orbitron'; }
+        .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+        .spec-table th, .spec-table td { padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); text-align: left; }
+        .spec-table th { color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 0.85rem; }
+        .spec-table td { color: #f8fafc; font-size: 1rem; }
+        .btn-primary { background: var(--neon-pink); border: none; color: #fff; padding: 0.9rem 2rem; font-family: 'Orbitron'; font-weight: 700; cursor: pointer; box-shadow: 0 0 20px rgba(255, 0, 127, 0.6); }
+
+        /* CHATBOT */
+        .chat-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 340px;
+            background: rgba(14, 8, 30, 0.96);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 8px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4);
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: linear-gradient(90deg, #220c44 0%, #0c234a 100%);
+            padding: 0.8rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Orbitron';
+            font-size: 0.85rem;
+            color: var(--neon-cyan);
+        }
+        .chat-header button { background: none; border: none; color: #fff; cursor: pointer; font-size: 1.2rem; }
+        .chat-body { display: flex; flex-direction: column; height: 280px; }
+        .chat-log { flex: 1; padding: 1rem; overflow-y: auto; font-size: 0.9rem; }
+        .chat-msg { margin-bottom: 0.7rem; line-height: 1.5; }
+        .chat-msg.user { color: var(--neon-yellow); text-align: right; }
+        .chat-msg.bot { color: #38bdf8; }
+        .chat-msg .sender { color: var(--neon-pink); font-weight: bold; margin-right: 4px; }
+        .chat-input-area { display: flex; border-top: 1px solid rgba(0, 243, 255, 0.3); background: rgba(9, 6, 20, 0.9); }
+        .chat-input-area input { flex: 1; background: transparent; border: none; padding: 0.8rem 1rem; color: #fff; outline: none; font-size: 1rem; }
+        .chat-input-area button { background: var(--neon-pink); border: none; color: #fff; padding: 0 1.2rem; font-family: 'Orbitron'; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <a href="{{ url_for('index') }}">CYBER<span>//BOTICS</span></a>
+        </div>
+        <nav class="nav">
+            <a href="{{ url_for('index') }}">SHOWCASE</a>
+            <a href="#metrics">MARKET STATS</a>
+        </nav>
+        <div class="header-status">
+            <span class="status-indicator"></span> ONLINE [SYS.V88]
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 플로팅 챗봇 -->
+    <div id="cyber-chat-widget" class="chat-widget">
+        <div id="chat-header" class="chat-header">
+            <span>TERMINAL: AEGIS-0</span>
+            <button id="chat-toggle-btn">_</button>
+        </div>
+        <div id="chat-body" class="chat-body">
+            <div class="chat-log" id="chat-log">
+                <div class="chat-msg bot">
+                    <span class="sender">[AEGIS]</span> 환영합니다. 로봇 및 XR 산업 질의를 입력하십시오.
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="명령어 입력..." autocomplete="off">
+                <button id="chat-send-btn">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+</body>
+</html>

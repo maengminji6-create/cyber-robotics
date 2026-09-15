@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <a href="{{ url_for('index') }}" class="back-link">&larr; BACK TO ARCHIVE</a>
+        <div class="unit-code">{{ unit.id }} // STATUS: {{ unit.status }}</div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-visual">
+            <img src="{{ unit.image }}" 
+                 alt="{{ unit.name }}" 
+                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&q=80';">
+        </div>
+
+        <div class="detail-info">
+            <span class="unit-category-tag">{{ unit.category }}</span>
+            <h1 class="detail-title">{{ unit.name }}</h1>
+            <p class="detail-desc">{{ unit.desc }}</p>
+
+            <div class="insight-box">
+                <h4>INDUSTRY & MARKET INTELLIGENCE</h4>
+                <p>{{ unit.industry_insight }}</p>
+                <span class="intel-source">Source: {{ unit.source }}</span>
+            </div>
+
+            <div class="spec-table-wrap">
+                <h3>TELEMETRY & HARDWARE SPECS</h3>
+                <table class="spec-table">
+                    {% for key, val in unit.specs.items() %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ val }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            <div class="action-wrap">
+                <button class="btn-primary" onclick="alert('데이터가 브라우저에 캐싱되었습니다.')">EXPORT INTELLIGENCE REPORT</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

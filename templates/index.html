@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="glitch-title">CYBER-BOTICS ARCHIVE</div>
+    <p class="hero-sub">글로벌 탑티어 로보틱스 & 가상/증강 공간컴퓨팅 기기 분석 플랫폼</p>
+</section>
+
+<!-- 시장 지표 대시보드 -->
+<section class="metrics-section" id="metrics">
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <span class="metric-label">GLOBAL HUMANOID CAGR</span>
+            <div class="metric-val">{{ metrics.robotics_cagr }}</div>
+            <div class="metric-desc">연평균 시장 성장률 전망치</div>
+            <div class="metric-src">[출처: {{ metrics.cagr_source }}]</div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">SPATIAL COMPUTING CAP</span>
+            <div class="metric-val">{{ metrics.spatial_computing_market }}</div>
+            <div class="metric-desc">XR 공간컴퓨팅 예상 시장 규모</div>
+            <div class="metric-src">[출처: {{ metrics.spatial_source }}]</div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">AUTOMATION ADOPTION</span>
+            <div class="metric-val">{{ metrics.smart_factory_automation }}</div>
+            <div class="metric-desc">글로벌 탑티어 공장 로봇 자동화율</div>
+            <div class="metric-src">[출처: {{ metrics.factory_source }}]</div>
+        </div>
+    </div>
+</section>
+
+<!-- 카테고리 필터 및 카드 그리드 -->
+<section class="gallery-container">
+    <div class="filter-bar">
+        <button class="filter-btn active" data-filter="ALL">ALL UNITS</button>
+        <button class="filter-btn" data-filter="HUMANOID">HUMANOID</button>
+        <button class="filter-btn" data-filter="XR-SPATIAL">XR / SPATIAL</button>
+        <button class="filter-btn" data-filter="VR-AR">VR / AR</button>
+        <button class="filter-btn" data-filter="SURGICAL">SURGICAL</button>
+    </div>
+
+    <div class="grid" id="robot-grid">
+        {% for unit in units %}
+        <div class="card" data-category="{{ unit.category }}">
+            <div class="card-img-wrapper">
+                <img src="{{ unit.image }}" alt="{{ unit.name }}">
+                <div class="card-overlay">
+                    <a href="{{ url_for('detail', unit_id=unit.id) }}" class="btn-inspect">ACCESS UNIT DOSSIER</a>
+                </div>
+            </div>
+            <div class="card-info">
+                <div class="card-top-meta">
+                    <span class="unit-id">{{ unit.id }}</span>
+                    <span class="category-badge">{{ unit.category }}</span>
+                </div>
+                <h3 class="unit-title">{{ unit.name }}</h3>
+                <p class="unit-dev">DEV: {{ unit.developer }}</p>
+                <p class="unit-brief">{{ unit.desc[:55] }}...</p>
+                <div class="card-source-tag">{{ unit.source.split(':')[0] }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
