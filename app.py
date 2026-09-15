@@ -1,136 +1,144 @@
-# 수정 전
 from flask import Flask, render_template, request, jsonify, abort
 
 app = Flask(__name__)
 
-TECH_UNITS = [
+ESCAPE_ROOMS = [
     {
-        "id": "UNIT-01",
-        "name": "Boston Dynamics Atlas",
-        "category": "HUMANOID",
-        "developer": "Boston Dynamics (Hyundai Motor Group)",
-        "status": "ALL-ELECTRIC 2024",
-        "desc": "기존 유압 방식을 전면 폐기하고 360도 회전 관절 액추에이터를 탑재한 완전 전동식 차세대 휴머노이드 로봇.",
-        "image": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80",
-        "market_share": "산업 제조용 로보틱스 글로벌 기술 선두",
-        "specs": {
-            "Actuation": "Full Electric Custom Actuators (360° 무제한 가동)",
-            "Sensors": "Real-time Multi-Depth Computer Vision",
-            "Autonomy": "Reinforcement Learning Model",
-            "Target Field": "현대차 생산 라인 차체 조립 및 부품 운반 자동화"
-        },
-        "industry_insight": "골드만삭스(Goldman Sachs) 분석 보고서에 따르면 글로벌 휴머노이드 로봇 시장은 2035년까지 380억 달러(약 50조 원) 규모에 도달하며 연간 140만 대 이상 출하될 것으로 전망됩니다.",
-        "source": "Goldman Sachs Global Investment Research: Humanoids Report"
+        "id": "ROOM-01",
+        "name": "AI 메인프레임 제어실",
+        "codename": "CORE_BREACH",
+        "type": "freq-tuner",
+        "difficulty": "★★☆☆☆",
+        "time_limit": "15분",
+        "clear_rate": "84%",
+        "status": "LOCKED [LEVEL 1]",
+        "image": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+        "story": "폭주한 AI 코어가 이상 음파 록을 걸었습니다. 주파수 슬라이더를 조작해 공진 파형을 잡고 동기화하십시오.",
+        "clues": [
+            {"title": "단서 1: 스펙트럼 분석기", "text": "화면에 '80MHz와 90MHz 사이, 소수점 첫째 자리가 5인 지점'이라는 로그가 깜빡입니다."},
+            {"title": "단서 2: 다이얼 매뉴얼", "text": "슬라이더를 정확한 수치로 이동시킨 뒤 [SYNC FREQUENCY] 버튼을 누르세요."},
+            {"title": "단서 3: 보안 쪽지", "text": "AI의 핵심 공진 주파수는 88.X MHz 대역입니다."}
+        ],
+        "answer_keyword": "88.5",
+        "reward_item": "음파 암호화 코어 칩"
     },
     {
-        "id": "UNIT-02",
-        "name": "Tesla Optimus Gen 2",
-        "category": "HUMANOID",
-        "developer": "Tesla, Inc.",
-        "status": "INTERNAL PILOT DEPLOYED",
-        "desc": "테슬라 자율주행(FSD) 신경망과 11자유도 촉각 센서 손가락을 결합하여 공정 부품을 실시간 분류하는 양산형 안드로이드.",
-        "image": "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?auto=format&fit=crop&w=800&q=80",
-        "specs": {
-            "Weight": "57kg (이전 세대 대비 10kg 경량화)",
-            "Hands": "11 DoF 손가락 + 촉각 햅틱 센서",
-            "Neural Net": "Tesla Video Neural Net (End-to-End)",
-            "Target Price": "양산 시 20,000 ~ 25,000 USD 목표"
-        },
-        "industry_insight": "모건 스탠리(Morgan Stanley) 분석에 따르면 테슬라는 기가팩토리 내부 배터리 셀 공정에 실전 투입을 시작했으며, 인건비 절감과 24시간 연속 가동을 목표로 하고 있습니다.",
-        "source": "Morgan Stanley Equity Research & Tesla Shareholder Deck"
+        "id": "ROOM-02",
+        "name": "바이오 사이보그 실험실",
+        "codename": "CYBER_LAB",
+        "type": "chem-lab",
+        "difficulty": "★★★☆☆",
+        "time_limit": "20분",
+        "clear_rate": "68%",
+        "status": "LOCKED [BIOHAZARD]",
+        "image": "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=800&q=80",
+        "story": "신경 가스가 살포되고 있습니다! 시약 A와 B를 조합하여 정확히 100% 중화 농도를 완성하고 배기구를 여십시오.",
+        "clues": [
+            {"title": "단서 1: 배합 레시피", "text": "신경독 중화 배합: A시약과 B시약은 각각 1회당 20%의 농도를 지닙니다."},
+            {"title": "단서 2: 화학적 균형", "text": "A시약의 주입 횟수가 B시약보다 정확히 1번 더 많아야 중화가 일어납니다. (총합 5회)"},
+            {"title": "단서 3: 안전 주의사항", "text": "100%를 단 1%라도 초과하면 폭발하므로 정확히 5번(100%)을 채우십시오."}
+        ],
+        "answer_keyword": "A3-B2",
+        "reward_item": "나노 중화제 해독 키"
     },
     {
-        "id": "UNIT-03",
-        "name": "Apple Vision Pro",
-        "category": "XR-SPATIAL",
-        "developer": "Apple Inc.",
-        "status": "COMMERCIAL PLATFORM",
-        "desc": "초고해상도 듀얼 마이크로 OLED와 R1 실시간 센서 프로세서를 탑재하여 공간 자체를 캔버스로 쓰는 공간 컴퓨터.",
-        "image": "https://images.unsplash.com/photo-1593508512255-86ab42a8e620?auto=format&fit=crop&w=800&q=80",
-        "specs": {
-            "Display": "2,300만 화소 3D 마이크로 OLED (눈당 4K 이상)",
-            "Chipset": "Apple M2 + R1 듀얼 실리콘 (12ms 지연율)",
-            "Tracking": "카메라 12개, 센서 5개, 정밀 시선 및 제스처 인식",
-            "OS": "visionOS 공간 운영체제"
-        },
-        "industry_insight": "가트너(Gartner)에 따르면 엔터프라이즈 정밀 수술 시뮬레이션 및 항공/자동차 3D CAD 원격 협업 분야에서 B2B 도입이 급성장하고 있습니다.",
-        "source": "Gartner Enterprise Emerging Tech Report"
-    },
-    {
-        "id": "UNIT-04",
-        "name": "Meta Quest 3",
-        "category": "VR-AR",
-        "developer": "Meta Platforms, Inc.",
-        "status": "MASS COMMERCIAL",
-        "desc": "팬케이크 광학 렌즈와 듀얼 컬러 패스스루 카메라로 선명한 혼합현실(MR)을 구현한 세계 최고 점유율 기기.",
-        "image": "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?auto=format&fit=crop&w=800&q=80",
-        "specs": {
-            "Optics": "4K+ Infinite Display (눈당 2064x2208)",
-            "SoC": "Qualcomm Snapdragon XR2 Gen 2",
-            "Pass-through": "듀얼 4MP RGB 컬러 카메라 + 심도 센서",
-            "Weight": "515g 경량 헤드셋"
-        },
-        "industry_insight": "시장조사기관 IDC의 공인 트래커에 따르면 Meta는 전 세계 독립형 VR/MR 헤드셋 시장 점유율 70% 이상을 유지하며 시장 표준을 이끌고 있습니다.",
-        "source": "IDC Worldwide Quarterly AR/VR Tracker"
-    },
-    {
-        "id": "UNIT-05",
-        "name": "Intuitive Da Vinci 5",
-        "category": "SURGICAL",
-        "developer": "Intuitive Surgical",
-        "status": "FDA 510(k) CLEARED",
-        "desc": "10,000배 향상된 컴퓨팅 파워와 촉각 센싱(Force Feedback)을 통해 외과의의 손끝 감각을 재현하는 정밀 수술 로봇.",
-        # 안정적인 로봇 수술실 고화질 직결 링크
-        "image": "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80",
-        "specs": {
-            "Force Sensing": "조직 압력 실시간 역각 전달",
-            "Console": "3D 4K 고해상도 디지털 뷰어",
-            "Computing": "차세대 통합 AI 연산 하드웨어",
-            "Track Record": "글로벌 누적 수술 1,400만 건 이상"
-        },
-        "industry_insight": "IFR(국제로봇연맹) 보고서에 따르면 수술용 로봇은 고령화와 최소침습 시술 보편화로 의료기기 산업군 중 가장 안정적인 고성장세를 기록 중입니다.",
-        "source": "International Federation of Robotics (IFR) World Robotics Report"
+        "id": "ROOM-03",
+        "name": "메가코프 블랙볼트 금고",
+        "codename": "BLACK_VAULT",
+        "type": "laser-matrix",
+        "difficulty": "★★★☆☆",
+        "time_limit": "20분",
+        "clear_rate": "55%",
+        "status": "LOCKED [LASER GRID]",
+        "image": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+        "story": "양자 레이저망이 금고를 둘러싸고 있습니다. 올바른 순서로 센서 노드를 바이패스하여 레이저를 무력화하십시오.",
+        "clues": [
+            {"title": "단서 1: 청사진 로그", "text": "첫 시작은 항상 첫 번째 그리스 문자 'ALPHA' 노드입니다."},
+            {"title": "단서 2: 배선 간섭계", "text": "'BETA' 노드는 가장 마지막에 차단해야 과부하를 막을 수 있습니다."},
+            {"title": "단서 3: 우회 프로토콜", "text": "중간 다리 역할을 하는 노드는 'GAMMA'입니다."}
+        ],
+        "answer_keyword": "ALPHA-GAMMA-BETA",
+        "reward_item": "시온 마스터 큐브"
     }
 ]
 
-INDUSTRY_METRICS = {
-    "robotics_cagr": "38.5%",
-    "cagr_source": "Goldman Sachs Research (2024-2035)",
-    "spatial_computing_market": "$120B+",
-    "spatial_source": "IDC & MarketsandMarkets Worldwide XR Report",
-    "smart_factory_automation": "64.2%",
-    "factory_source": "IFR World Robotics Statistics"
-}
-
 @app.route('/')
 def index():
-    return render_template('index.html', units=TECH_UNITS, metrics=INDUSTRY_METRICS)
+    return render_template('index.html', rooms=ESCAPE_ROOMS)
 
-@app.route('/unit/<unit_id>')
-def detail(unit_id):
-    unit = next((item for item in TECH_UNITS if item["id"] == unit_id), None)
-    if not unit:
+@app.route('/room/<room_id>')
+def detail(room_id):
+    room = next((item for item in ESCAPE_ROOMS if item["id"] == room_id), None)
+    if not room:
         abort(404)
-    return render_template('detail.html', unit=unit)
+    return render_template('detail.html', room=room)
 
+# 개별 힌트 및 정답 분리 처리 챗봇
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.get_json() or {}
-    message = data.get('message', '').strip().lower()
+    msg = data.get('message', '').strip().lower()
 
-    if not message:
-        return jsonify({"reply": "[SYS:ERR] 입력된 명령어가 없습니다."})
+    if not msg:
+        return jsonify({"reply": "[SYS:ERR] 명령어를 입력하십시오."})
 
-    if "골드만" in message or "전망" in message or "성장" in message or "시장" in message:
-        reply = "골드만삭스(Goldman Sachs) 분석 보고서에 따르면 휴머노이드 로봇 시장은 2035년까지 380억 달러 규모로 성장할 것으로 전망됩니다."
-    elif "퀘스트" in message or "메타" in message or "점유율" in message:
-        reply = "IDC 공인 리포트에 따르면 Meta는 글로벌 독립형 VR/MR 헤드셋 시장 점유율 약 70%를 점유하고 있습니다."
-    elif "아틀라스" in message or "보스턴" in message:
-        reply = "보스턴 다이내믹스의 All-Electric Atlas는 전동 액추에이터를 통해 360도 관절 회전이 가능하며 현대차 공장에 실전 투입됩니다."
-    elif "출처" in message:
-        reply = "본 사이트의 데이터는 Goldman Sachs, IDC, IFR, Morgan Stanley 공시 보고서에 기반합니다."
+    # --- 1. 개별 방 힌트 요청 ---
+    if any(k in msg for k in ["1번 힌트", "1번방 힌트", "1번힌트"]):
+        reply = (
+            "💡 <b>[1번방 (제어실) 전술 힌트]</b><br>"
+            "• 스펙트럼 분석기 로그를 보면 88MHz 근처에서 녹색 파형이 잡힙니다.<br>"
+            "• 소수점 한 자리 숫자는 <b>.5</b>입니다. 슬라이더를 88.0과 89.0의 정중앙에 맞춰보세요!"
+        )
+    elif any(k in msg for k in ["2번 힌트", "2번방 힌트", "2번힌트"]):
+        reply = (
+            "💡 <b>[2번방 (실험실) 전술 힌트]</b><br>"
+            "• A와 B 시약은 각각 1번 누를 때마다 +20%씩 증가합니다.<br>"
+            "• 총 5번 눌러서 100%를 채워야 하며, A를 B보다 1번 더 많이 눌러야 합니다. (A는 3번, B는 2번!)"
+        )
+    elif any(k in msg for k in ["3번 힌트", "3번방 힌트", "3번힌트"]):
+        reply = (
+            "💡 <b>[3번방 (금고) 전술 힌트]</b><br>"
+            "• 첫 번째는 1번 알파(ALPHA), 마지막은 2번 베타(BETA)입니다.<br>"
+            "• 즉, 가운데에 감마(GAMMA)를 넣어 순서대로 터치해보십시오!"
+        )
+    elif any(k in msg for k in ["힌트", "도움"]):
+        reply = (
+            "💡 <b>어느 구역의 힌트가 필요하십니까?</b><br>"
+            "원하시는 방 번호를 붙여 질문하십시오:<br>"
+            "👉 <b>'1번 힌트'</b>, <b>'2번 힌트'</b>, <b>'3번 힌트'</b><br>"
+            "※ 바로 해답을 원하시면 <b>'1번 정답'</b>처럼 입력하십시오."
+        )
+
+    # --- 2. 개별 방 정답 요청 ---
+    elif any(k in msg for k in ["1번 정답", "1번방 정답", "1번답", "1번방 답"]):
+        reply = (
+            "🔓 <b>[1번방 (AI 제어실) 솔루션]</b><br>"
+            "• <b>목표 주파수:</b> <b>88.5 MHz</b><br>"
+            "• <b>해결법:</b> 슬라이더를 드래그하여 정확히 <b>88.5</b>에 맞춘 뒤 [SYNC FREQUENCY] 버튼을 클릭하십시오."
+        )
+    elif any(k in msg for k in ["2번 정답", "2번방 정답", "2번답", "2번방 답"]):
+        reply = (
+            "🔓 <b>[2번방 (생체 실험실) 솔루션]</b><br>"
+            "• <b>배합 공식:</b> <b>A 3회 + B 2회 = 100%</b><br>"
+            "• <b>해결법:</b> [INJECT REAGENT A]를 3번, [INJECT REAGENT B]를 2번 눌러 100%를 만든 후 [PURGE & VENT]를 누르십시오."
+        )
+    elif any(k in msg for k in ["3번 정답", "3번방 정답", "3번답", "3번방 답"]):
+        reply = (
+            "🔓 <b>[3번방 (비밀 금고) 솔루션]</b><br>"
+            "• <b>안전 노드 순서:</b> <b>ALPHA &rarr; GAMMA &rarr; BETA</b><br>"
+            "• <b>해결법:</b> 우측 3개의 노드 버튼을 ALPHA -> GAMMA -> BETA 순서로 클릭하십시오."
+        )
+    elif any(k in msg for k in ["정답", "답", "솔루션", "해답"]):
+        reply = (
+            "⚠️ 스포일러 방지를 위해 방 번호를 함께 입력해 주십시오:<br>"
+            "👉 <b>'1번 정답'</b>, <b>'2번 정답'</b>, <b>'3번 정답'</b>"
+        )
+
+    elif any(k in msg for k in ["안녕", "누구", "하이"]):
+        reply = "시스템 온라인. 전술 해킹 AI 'AEGIS'입니다. <b>'1번 힌트'</b> 또는 <b>'1번 정답'</b>처럼 명령을 내려주십시오."
+
     else:
-        reply = f"명령어 '{message}' 수신: '출처', '골드만삭스', '퀘스트 점유율', '아틀라스' 등을 입력하시면 핵심 시장 지표를 전달합니다."
+        reply = f"명령어 '{msg}' 수신 완료. 힌트나 정답이 필요하시면 <b>'1번 힌트'</b>, <b>'1번 정답'</b> 형식으로 입력해 주십시오."
 
     return jsonify({"reply": reply})
 

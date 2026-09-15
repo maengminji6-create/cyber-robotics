@@ -1,66 +1,479 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="hero-section">
-    <div class="glitch-title">CYBER-BOTICS ARCHIVE</div>
-    <p class="hero-sub">글로벌 탑티어 로보틱스 & 가상/증강 공간컴퓨팅 기기 분석 플랫폼</p>
-</section>
+<style>
+    /* 동적 스토리 모달 (형광 핑크 테두리) */
+    .story-modal-wrap {
+        position: fixed; inset: 0; background: rgba(5, 5, 10, 0.98);
+        z-index: 5000; display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(15px); padding: 1.5rem;
+    }
+    .story-terminal-box {
+        max-width: 720px; width: 100%; background: #080811;
+        border: 2px solid var(--neon-pink); box-shadow: 0 0 50px rgba(255, 0, 85, 0.5);
+        position: relative; overflow: hidden;
+    }
+    .story-top-bar {
+        background: var(--neon-pink); color: #fff; padding: 0.6rem 1.2rem;
+        font-family: 'Orbitron'; font-weight: 900; font-size: 0.85rem;
+        letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .story-body { padding: 2.5rem; }
+    .story-alert-tag { color: var(--neon-pink); font-family: 'Orbitron'; font-size: 0.9rem; margin-bottom: 0.8rem; font-weight: bold; text-shadow: 0 0 10px var(--neon-pink); }
+    .story-headline { font-family: 'Orbitron'; font-size: 2.1rem; color: #fff; margin-bottom: 1.3rem; text-shadow: 0 0 20px var(--neon-pink); }
+    .story-desc { color: #cbd5e1; font-size: 1.05rem; line-height: 1.75; margin-bottom: 2rem; border-left: 3px solid var(--neon-pink); padding-left: 1.2rem; }
+    
+    .btn-continue-mission {
+        display: block; width: 100%; text-align: center;
+        background: var(--neon-pink); color: #fff; font-family: 'Orbitron'; font-weight: 900;
+        font-size: 1.1rem; padding: 1.1rem; border: none; cursor: pointer; transition: 0.2s;
+        box-shadow: 0 0 25px rgba(255, 0, 85, 0.6);
+    }
+    .btn-continue-mission:hover { background: #ff2a77; box-shadow: 0 0 40px var(--neon-pink); }
 
-<!-- 시장 지표 대시보드 -->
-<section class="metrics-section" id="metrics">
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <span class="metric-label">GLOBAL HUMANOID CAGR</span>
-            <div class="metric-val">{{ metrics.robotics_cagr }}</div>
-            <div class="metric-desc">연평균 시장 성장률 전망치</div>
-            <div class="metric-src">[출처: {{ metrics.cagr_source }}]</div>
+    /* 최종 3번방 클리어 축하 및 보상 모달 */
+    .grand-clear-modal {
+        position: fixed; inset: 0; background: rgba(5, 5, 10, 0.98);
+        z-index: 6000; display: none; justify-content: center; align-items: center; padding: 1.5rem;
+    }
+    .grand-clear-box {
+        max-width: 680px; width: 100%; background: #080811;
+        border: 2px solid var(--neon-pink); box-shadow: 0 0 60px rgba(255, 0, 85, 0.6);
+        padding: 3rem; text-align: center; position: relative;
+    }
+    .grand-clear-title { font-family: 'Orbitron'; font-size: 2.4rem; color: var(--neon-pink); text-shadow: 0 0 25px var(--neon-pink); margin-bottom: 0.8rem; }
+    .grand-clear-desc { color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem; }
+    
+    .reward-item-container {
+        display: flex; justify-content: center; gap: 15px; margin-bottom: 2rem; flex-wrap: wrap;
+    }
+    .reward-badge {
+        background: rgba(255, 0, 85, 0.15); border: 1px solid var(--neon-pink);
+        padding: 0.8rem 1.2rem; border-radius: 6px; font-family: 'Orbitron'; font-size: 0.85rem; color: #fff;
+    }
+    .reward-badge strong { color: var(--neon-pink); display: block; margin-top: 4px; font-size: 0.95rem; text-shadow: 0 0 8px var(--neon-pink); }
+    
+    .grand-btn-row { display: flex; gap: 15px; justify-content: center; }
+    .btn-grand-avatar {
+        background: var(--neon-pink); color: #fff; border: none; padding: 1rem 1.8rem;
+        font-family: 'Orbitron'; font-weight: 900; cursor: pointer; font-size: 0.95rem;
+        box-shadow: 0 0 25px rgba(255, 0, 85, 0.6); transition: 0.2s;
+    }
+    .btn-grand-avatar:hover { background: #ff2a77; box-shadow: 0 0 35px var(--neon-pink); }
+    .btn-grand-reset {
+        background: transparent; color: #94a3b8; border: 1px solid #334155;
+        padding: 1rem 1.5rem; font-family: 'Orbitron'; font-weight: 700; cursor: pointer;
+    }
+    .btn-grand-reset:hover { border-color: #fff; color: #fff; }
+
+    /* 메인 Hero & 카드 그리드 */
+    .hero-wrap { text-align: center; padding: 3.5rem 1rem 2rem; }
+    .hero-tag { font-family: 'Orbitron'; color: var(--neon-pink); font-size: 0.9rem; letter-spacing: 3px; text-shadow: 0 0 10px var(--neon-pink); }
+    .hero-title {
+        font-family: 'Orbitron', sans-serif; font-size: 3.2rem; font-weight: 900;
+        color: #fff; text-shadow: 3px 3px 0px var(--neon-pink), -3px -3px 0px var(--neon-cyan);
+        margin: 0.5rem 0; letter-spacing: 3px;
+    }
+    .hero-desc { color: #94a3b8; font-size: 1.1rem; }
+
+    .room-grid-wrap { max-width: 1280px; margin: 0 auto; padding: 0 2rem 5rem; }
+    .section-title { font-family: 'Orbitron'; font-size: 1.4rem; color: var(--neon-pink); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 10px var(--neon-pink); }
+    .section-title::before { content: ''; width: 12px; height: 12px; background: var(--neon-pink); display: inline-block; box-shadow: 0 0 10px var(--neon-pink); }
+    
+    .room-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 2rem; }
+    .room-card { background: var(--card-dark); border: 1px solid rgba(255, 0, 85, 0.3); position: relative; overflow: hidden; transition: 0.3s; }
+    .room-card.cleared { border-color: #22c55e !important; box-shadow: 0 0 25px rgba(34, 197, 94, 0.4); }
+    .room-card:hover { border-color: var(--neon-pink); box-shadow: 0 0 30px rgba(255, 0, 85, 0.35); transform: translateY(-4px); }
+    .room-img-box { position: relative; height: 210px; overflow: hidden; }
+    .room-img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .room-lock-tag {
+        position: absolute; top: 12px; left: 12px;
+        background: rgba(5, 5, 10, 0.9); border-left: 3px solid var(--neon-pink);
+        padding: 4px 10px; font-family: 'Orbitron'; font-size: 0.75rem; color: var(--neon-pink);
+    }
+    .room-lock-tag.cleared { border-left-color: #22c55e; color: #22c55e; }
+
+    .room-body { padding: 1.5rem; }
+    .room-sector { font-family: 'Orbitron'; font-size: 0.8rem; color: var(--neon-cyan); letter-spacing: 1px; }
+    .room-name { font-family: 'Orbitron'; font-size: 1.35rem; color: #fff; margin: 0.4rem 0 0.8rem; }
+    .room-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.2rem; border-bottom: 1px solid #1e293b; padding-bottom: 0.8rem; }
+    .room-meta span strong { color: var(--neon-pink); font-family: 'Orbitron'; }
+    .btn-enter-room {
+        display: block; width: 100%; text-align: center;
+        background: transparent; border: 1px solid var(--neon-pink); color: var(--neon-pink);
+        font-family: 'Orbitron'; font-weight: 800; padding: 0.85rem; text-decoration: none;
+        font-size: 0.85rem; letter-spacing: 1.5px; transition: 0.2s;
+    }
+    .btn-enter-room:hover { background: var(--neon-pink); color: #fff; box-shadow: 0 0 20px var(--neon-pink); }
+    .btn-enter-room.cleared { border-color: #22c55e; background: #22c55e; color: #000; }
+
+    /* 아바타 스튜디오 */
+    .studio-container { max-width: 1280px; margin: 0 auto 6rem; padding: 2.5rem; background: var(--card-dark); border: 1px solid var(--border-pink); border-left: 4px solid var(--neon-pink); }
+    .studio-layout { display: grid; grid-template-columns: 340px 1fr; gap: 3.5rem; align-items: center; }
+    .canvas-preview-card { background: #030308; border: 1px solid var(--border-pink); padding: 1.5rem; display: flex; flex-direction: column; align-items: center; }
+    #avatarCanvas { width: 280px; height: 340px; border: 1px solid var(--neon-pink); background: #05050a; }
+    .canvas-btn-row { display: flex; gap: 10px; width: 100%; margin-top: 1rem; }
+    .btn-save-license { flex: 2; background: var(--neon-pink); color: #fff; border: none; padding: 0.8rem; font-family: 'Orbitron'; font-weight: 800; cursor: pointer; box-shadow: 0 0 15px var(--neon-pink); }
+    .btn-rand { flex: 1; background: transparent; border: 1px solid var(--border-pink); color: #fff; font-family: 'Orbitron'; cursor: pointer; }
+
+    .controls-panel { display: flex; flex-direction: column; gap: 1.3rem; }
+    .ctrl-block label { font-family: 'Orbitron'; font-size: 0.85rem; color: var(--neon-pink); display: block; margin-bottom: 0.5rem; }
+    .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip { background: #10121d; border: 1px solid #232738; color: #cbd5e1; padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+    .chip.active, .chip:hover { background: var(--neon-pink); border-color: var(--neon-pink); color: #fff; font-weight: bold; box-shadow: 0 0 12px var(--neon-pink); }
+    .color-select-row { display: flex; gap: 12px; align-items: center; }
+    .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+    .color-dot.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 10px #fff; }
+</style>
+
+<!-- 동적 스토리 모달 -->
+<div class="story-modal-wrap" id="storyModal">
+    <div class="story-terminal-box">
+        <div class="story-top-bar">
+            <span>NEON ALERT // SYSTEM RESTRICTED</span>
+            <span>STATION: 2088-CORE</span>
         </div>
-        <div class="metric-card">
-            <span class="metric-label">SPATIAL COMPUTING CAP</span>
-            <div class="metric-val">{{ metrics.spatial_computing_market }}</div>
-            <div class="metric-desc">XR 공간컴퓨팅 예상 시장 규모</div>
-            <div class="metric-src">[출처: {{ metrics.spatial_source }}]</div>
-        </div>
-        <div class="metric-card">
-            <span class="metric-label">AUTOMATION ADOPTION</span>
-            <div class="metric-val">{{ metrics.smart_factory_automation }}</div>
-            <div class="metric-desc">글로벌 탑티어 공장 로봇 자동화율</div>
-            <div class="metric-src">[출처: {{ metrics.factory_source }}]</div>
+        <div class="story-body">
+            <div class="story-alert-tag" id="storyBadge">[긴급 상황 브리핑]</div>
+            <h2 class="story-headline" id="storyTitle">기지 격벽 폐쇄: 작전 개시</h2>
+            
+            <p class="story-desc" id="storyText">
+                서기 2088년 메가코프 기지의 인공지능 코어가 폭주했습니다.<br>
+                지하 80층 산소가 차단되기 전, <strong>1번 메인프레임 제어실</strong>의 주파수 다이얼을 맞춰 격벽을 여십시오!<br><br>
+                ※ 도움이 필요하면 챗봇에 <strong>'1번 힌트'</strong> 또는 <strong>'1번 정답'</strong>을 입력하십시오.
+            </p>
+
+            <button class="btn-continue-mission" id="btnContinueMission">
+                BREACH PROTOCOL (작전 구역 진입) &rarr;
+            </button>
         </div>
     </div>
+</div>
+
+<!-- 최종 탈출 성공 모달 -->
+<div class="grand-clear-modal" id="grandClearModal">
+    <div class="grand-clear-box">
+        <div style="font-family:'Orbitron'; color:var(--neon-pink); letter-spacing:2px; margin-bottom:8px;">★ MISSION ALL CLEAR ★</div>
+        <h1 class="grand-clear-title">축하합니다! 전 구역 탈출 성공!</h1>
+        <p class="grand-clear-desc">
+            황제 폐하의 날카로운 직관으로 메가코프의 모든 네온 방어망이 함락되었습니다.<br>
+            폭주하던 AI 코어를 영구 동결하고 지하 기지에서 무사히 탈출했습니다!
+        </p>
+
+        <div style="font-family:'Orbitron'; color:var(--neon-pink); font-size:0.9rem; margin-bottom:10px;">[탈환 획득 보상 아티팩트]</div>
+        <div class="reward-item-container">
+            <div class="reward-badge">SECTOR-01<strong>음파 암호화 코어 칩</strong></div>
+            <div class="reward-badge">SECTOR-02<strong>나노 중화제 해독 키</strong></div>
+            <div class="reward-badge">SECTOR-03<strong>시온 마스터 큐브</strong></div>
+        </div>
+
+        <div class="grand-btn-row">
+            <button class="btn-grand-avatar" id="btnGoAvatar">⚡ 탈출 요원 ID 카드 발급 (캐릭터 꾸미기) &darr;</button>
+            <button class="btn-grand-reset" id="btnResetEscape">처음부터 재도전</button>
+        </div>
+    </div>
+</div>
+
+<!-- 본문 메인 -->
+<section class="hero-wrap">
+    <div class="hero-tag">[SYSTEM OVERRIDE: 2088 PROTOCOL]</div>
+    <h1 class="hero-title">CYBER // BREAKOUT</h1>
+    <p class="hero-desc">형광 핑크 & 네온 다크 테마 가상 방탈출 시뮬레이션</p>
 </section>
 
-<!-- 카테고리 필터 및 카드 그리드 -->
-<section class="gallery-container">
-    <div class="filter-bar">
-        <button class="filter-btn active" data-filter="ALL">ALL UNITS</button>
-        <button class="filter-btn" data-filter="HUMANOID">HUMANOID</button>
-        <button class="filter-btn" data-filter="XR-SPATIAL">XR / SPATIAL</button>
-        <button class="filter-btn" data-filter="VR-AR">VR / AR</button>
-        <button class="filter-btn" data-filter="SURGICAL">SURGICAL</button>
-    </div>
-
-    <div class="grid" id="robot-grid">
-        {% for unit in units %}
-        <div class="card" data-category="{{ unit.category }}">
-            <div class="card-img-wrapper">
-                <img src="{{ unit.image }}" alt="{{ unit.name }}">
-                <div class="card-overlay">
-                    <a href="{{ url_for('detail', unit_id=unit.id) }}" class="btn-inspect">ACCESS UNIT DOSSIER</a>
-                </div>
+<!-- 방탈출 방 목록 -->
+<section class="room-grid-wrap">
+    <div class="section-title">ACTIVE HAZARD SECTORS (격리 구역)</div>
+    <div class="room-cards">
+        {% for room in rooms %}
+        <div class="room-card" id="card-{{ room.id }}">
+            <div class="room-img-box">
+                <img src="{{ room.image }}" alt="{{ room.name }}">
+                <div class="room-lock-tag" id="tag-{{ room.id }}">{{ room.status }}</div>
             </div>
-            <div class="card-info">
-                <div class="card-top-meta">
-                    <span class="unit-id">{{ unit.id }}</span>
-                    <span class="category-badge">{{ unit.category }}</span>
+            <div class="room-body">
+                <div class="room-sector">{{ room.id }} // {{ room.codename }}</div>
+                <h3 class="room-name">{{ room.name }}</h3>
+                <div class="room-meta">
+                    <span>난이도: <strong>{{ room.difficulty }}</strong></span>
+                    <span>타이머: <strong>{{ room.time_limit }}</strong></span>
+                    <span>시스템: <strong>{{ room.type|upper }}</strong></span>
                 </div>
-                <h3 class="unit-title">{{ unit.name }}</h3>
-                <p class="unit-dev">DEV: {{ unit.developer }}</p>
-                <p class="unit-brief">{{ unit.desc[:55] }}...</p>
-                <div class="card-source-tag">{{ unit.source.split(':')[0] }}</div>
+                <a href="{{ url_for('detail', room_id=room.id) }}" class="btn-enter-room" id="btn-{{ room.id }}">INFILTRATE ROOM &rarr;</a>
             </div>
         </div>
         {% endfor %}
     </div>
 </section>
+
+<!-- 아바타 스튜디오 -->
+<section class="studio-container" id="avatar-studio">
+    <div class="section-title">CYBER-RUNNER ID FORGE (신원 위장 아바타 생성기)</div>
+    <div class="studio-layout">
+        <div class="canvas-preview-card">
+            <canvas id="avatarCanvas" width="280" height="340"></canvas>
+            <div class="canvas-btn-row">
+                <button class="btn-save-license" id="btnExport">DOWNLOAD ID</button>
+                <button class="btn-rand" id="btnRand">RANDOM</button>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="ctrl-block">
+                <label>HAIRSTYLE & COLOR</label>
+                <div class="chip-group" id="hairGroup">
+                    <button class="chip active" data-v="twintail">네온 트윈테일</button>
+                    <button class="chip" data-v="shaggy">사이버 샤기 언더컷</button>
+                    <button class="chip" data-v="cyberdread">광섬유 드레드</button>
+                    <button class="chip" data-v="clean">크롬 숏컷</button>
+                </div>
+                <div class="color-select-row" style="margin-top: 10px;" id="hairColorGroup">
+                    <div class="color-dot active" style="background:#ff0055;" data-c="#ff0055"></div>
+                    <div class="color-dot" style="background:#00f0ff;" data-c="#00f0ff"></div>
+                    <div class="color-dot" style="background:#ffe600;" data-c="#ffe600"></div>
+                    <div class="color-dot" style="background:#a855f7;" data-c="#a855f7"></div>
+                    <div class="color-dot" style="background:#22c55e;" data-c="#22c55e"></div>
+                </div>
+            </div>
+
+            <div class="ctrl-block">
+                <label>OCULAR GEAR</label>
+                <div class="chip-group" id="gearGroup">
+                    <button class="chip active" data-v="catseye">홀로그램 캣츠아이 바이저</button>
+                    <button class="chip" data-v="tactical">밀리터리 싱글 스카우터</button>
+                    <button class="chip" data-v="headset">뉴럴링크 헤드셋</button>
+                    <button class="chip" data-v="none">장착 해제</button>
+                </div>
+            </div>
+
+            <div class="ctrl-block">
+                <label>CYBERNETIC IMPLANTS</label>
+                <div class="chip-group" id="implantGroup">
+                    <button class="chip active" data-v="neon-blush">옵틱 회로 블러셔</button>
+                    <button class="chip" data-v="jaw">카본 하프 마스크</button>
+                    <button class="chip" data-v="barcode">이마 바코드 시리얼</button>
+                    <button class="chip" data-v="none">순정 피부</button>
+                </div>
+            </div>
+
+            <div class="ctrl-block">
+                <label>JACKET TECHWEAR</label>
+                <div class="chip-group" id="jacketGroup">
+                    <button class="chip active" data-v="bomber">발광 봄버 재킷</button>
+                    <button class="chip" data-v="collar">하이넥 닌자 코트</button>
+                    <button class="chip" data-v="tactical-vest">전술 방탄 플레이트</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cleared = JSON.parse(localStorage.getItem('clearedRooms') || '[]');
+
+    cleared.forEach(id => {
+        const card = document.getElementById(`card-${id}`);
+        const tag = document.getElementById(`tag-${id}`);
+        const btn = document.getElementById(`btn-${id}`);
+        if (card) card.classList.add('cleared');
+        if (tag) {
+            tag.classList.add('cleared');
+            tag.textContent = 'CLEARED [UNLOCKED]';
+        }
+        if (btn) {
+            btn.classList.add('cleared');
+            btn.textContent = 'CLEARED (재입장 가능) ✔';
+        }
+    });
+
+    const storyModal = document.getElementById('storyModal');
+    const badge = document.getElementById('storyBadge');
+    const title = document.getElementById('storyTitle');
+    const text = document.getElementById('storyText');
+
+    if (cleared.includes('ROOM-01') && cleared.includes('ROOM-02') && cleared.includes('ROOM-03')) {
+        storyModal.style.display = 'none';
+        document.getElementById('grandClearModal').style.display = 'flex';
+    } 
+    else if (cleared.includes('ROOM-01') && cleared.includes('ROOM-02')) {
+        badge.textContent = '[진행 스토리 3단계: 최상층 잠입]';
+        title.innerHTML = '독가스 중화 완료!<br>최후의 비밀 금고 레이저망을 뚫으십시오!';
+        text.innerHTML = '1번 제어실과 2번 생체 실험실의 신경 독가스를 성공적으로 무력화했습니다.<br>이제 최상층 <strong>3번 블랙볼트 금고</strong>의 레이저 센서 노드를 정확한 순서로 바이패스하고 마스터 큐브를 탈취하십시오!<br><br>※ 챗봇에게 <strong>\'3번 힌트\'</strong> 또는 <strong>\'3번 정답\'</strong>을 물어보십시오.';
+    }
+    else if (cleared.includes('ROOM-01')) {
+        badge.textContent = '[진행 스토리 2단계: 실험실 침투]';
+        title.innerHTML = '1번 제어실 음파 주파수 동기화 성공!<br>2번 생체 실험실 화학 중화제를 배합하십시오!';
+        text.innerHTML = '축하합니다! 1번 AI 주파수를 안정화하여 격벽을 열었습니다.<br>그러나 <strong>2번 바이오 실험실</strong>에 신경 가스가 차오르고 있습니다. 시약 A와 B를 올바른 비율로 주입해 중화도 100%를 만들어 배기 밸브를 여십시오!<br><br>※ 챗봇에게 <strong>\'2번 힌트\'</strong> 또는 <strong>\'2번 정답\'</strong>을 물어보십시오.';
+    }
+
+    document.getElementById('btnContinueMission').addEventListener('click', () => {
+        storyModal.style.display = 'none';
+    });
+
+    document.getElementById('btnGoAvatar').addEventListener('click', () => {
+        document.getElementById('grandClearModal').style.display = 'none';
+        const target = document.getElementById('avatar-studio');
+        target.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('btnResetEscape').addEventListener('click', () => {
+        localStorage.removeItem('clearedRooms');
+        window.location.reload();
+    });
+
+    // 핑크 테마 아바타 드로잉 엔진
+    const canvas = document.getElementById('avatarCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let state = {
+        hair: 'twintail',
+        hairColor: '#ff0055',
+        gear: 'catseye',
+        implant: 'neon-blush',
+        jacket: 'bomber'
+    };
+
+    const render = () => {
+        ctx.clearRect(0, 0, 280, 340);
+
+        ctx.fillStyle = '#05050a';
+        ctx.fillRect(0, 0, 280, 340);
+
+        const grad = ctx.createRadialGradient(140, 150, 20, 140, 150, 130);
+        grad.addColorStop(0, state.hairColor + '55');
+        grad.addColorStop(1, '#00000000');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(140, 150, 130, 0, Math.PI*2); ctx.fill();
+
+        if (state.jacket === 'bomber') {
+            ctx.fillStyle = '#0c0d17';
+            ctx.beginPath(); ctx.moveTo(50, 340); ctx.lineTo(90, 240); ctx.lineTo(190, 240); ctx.lineTo(230, 340); ctx.fill();
+            ctx.strokeStyle = state.hairColor; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(85, 245); ctx.lineTo(140, 280); ctx.lineTo(195, 245); ctx.stroke();
+        } else if (state.jacket === 'collar') {
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(60, 240, 160, 100);
+            ctx.fillStyle = '#ff0055'; ctx.fillRect(100, 240, 80, 45);
+        } else {
+            ctx.fillStyle = '#1e293b'; ctx.fillRect(70, 250, 140, 90);
+            ctx.fillStyle = '#ffe600'; ctx.fillRect(110, 260, 60, 18);
+        }
+
+        ctx.fillStyle = '#d1a892'; ctx.fillRect(125, 200, 30, 45);
+        ctx.fillStyle = '#f5d6c6';
+        ctx.beginPath(); ctx.moveTo(100, 125); ctx.quadraticCurveTo(95, 205, 140, 225); ctx.quadraticCurveTo(185, 205, 180, 125); ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(115, 160, 14, 6); ctx.fillRect(151, 160, 14, 6);
+        ctx.fillStyle = state.hairColor;
+        ctx.beginPath(); ctx.arc(122, 163, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(158, 163, 3, 0, Math.PI*2); ctx.fill();
+
+        ctx.strokeStyle = '#c27d66'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(134, 200); ctx.lineTo(146, 200); ctx.stroke();
+
+        if (state.implant === 'neon-blush') {
+            ctx.strokeStyle = '#ff0055'; ctx.lineWidth = 2;
+            ctx.strokeRect(105, 170, 16, 2); ctx.strokeRect(159, 170, 16, 2);
+        } else if (state.implant === 'jaw') {
+            ctx.fillStyle = '#111827';
+            ctx.beginPath(); ctx.moveTo(110, 190); ctx.lineTo(140, 225); ctx.lineTo(170, 190); ctx.fill();
+            ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1;
+            ctx.stroke();
+        } else if (state.implant === 'barcode') {
+            ctx.fillStyle = '#000';
+            for(let i=0; i<15; i+=3) { ctx.fillRect(133+i, 120, 2, 8); }
+        }
+
+        ctx.fillStyle = state.hairColor;
+        if (state.hair === 'twintail') {
+            ctx.beginPath();
+            ctx.moveTo(95, 130); ctx.lineTo(105, 75); ctx.lineTo(140, 95); ctx.lineTo(175, 75); ctx.lineTo(185, 130);
+            ctx.lineTo(170, 115); ctx.lineTo(140, 125); ctx.lineTo(110, 115); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(90, 105); ctx.quadraticCurveTo(45, 145, 65, 260); ctx.lineTo(80, 230); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(190, 105); ctx.quadraticCurveTo(235, 145, 215, 260); ctx.lineTo(200, 230); ctx.closePath(); ctx.fill();
+        } else if (state.hair === 'shaggy') {
+            ctx.beginPath();
+            ctx.moveTo(85, 135); ctx.lineTo(100, 55); ctx.lineTo(180, 55); ctx.lineTo(195, 135);
+            ctx.lineTo(170, 95); ctx.lineTo(140, 130); ctx.lineTo(110, 95); ctx.fill();
+            ctx.fillStyle = '#05050a'; ctx.fillRect(85, 125, 10, 30); ctx.fillRect(185, 125, 10, 30);
+        } else if (state.hair === 'cyberdread') {
+            for(let x=90; x<=180; x+=18) {
+                ctx.fillStyle = state.hairColor; ctx.fillRect(x, 65, 10, 160);
+                ctx.fillStyle = '#fff'; ctx.fillRect(x, 145, 10, 4);
+            }
+        } else {
+            ctx.beginPath(); ctx.arc(140, 135, 45, Math.PI, 0); ctx.fill();
+        }
+
+        if (state.gear === 'catseye') {
+            ctx.fillStyle = 'rgba(255, 0, 85, 0.85)';
+            ctx.beginPath();
+            ctx.moveTo(100, 155); ctx.lineTo(140, 165); ctx.lineTo(180, 155); ctx.lineTo(190, 145); ctx.lineTo(140, 150); ctx.lineTo(90, 145);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+        } else if (state.gear === 'tactical') {
+            ctx.fillStyle = '#00f0ff'; ctx.fillRect(150, 150, 30, 20);
+            ctx.strokeStyle = '#fff'; ctx.strokeRect(150, 150, 30, 20);
+        } else if (state.gear === 'headset') {
+            ctx.fillStyle = '#334155'; ctx.fillRect(80, 135, 14, 35); ctx.fillRect(186, 135, 14, 35);
+            ctx.strokeStyle = state.hairColor; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(140, 125, 53, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
+        }
+
+        ctx.strokeStyle = '#ff0055'; ctx.lineWidth = 4; ctx.strokeRect(0, 0, 280, 340);
+        ctx.fillStyle = '#ff0055'; ctx.font = 'bold 10px Orbitron'; ctx.fillText('RUNNER ID // VERIFIED', 15, 25);
+    };
+
+    const setupChips = (groupId, key) => {
+        const group = document.getElementById(groupId);
+        group.querySelectorAll('.chip').forEach(c => {
+            c.addEventListener('click', () => {
+                group.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+                c.classList.add('active');
+                state[key] = c.getAttribute('data-v');
+                render();
+            });
+        });
+    };
+
+    setupChips('hairGroup', 'hair');
+    setupChips('gearGroup', 'gear');
+    setupChips('implantGroup', 'implant');
+    setupChips('jacketGroup', 'jacket');
+
+    document.getElementById('hairColorGroup').querySelectorAll('.color-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+            state.hairColor = dot.getAttribute('data-c');
+            render();
+        });
+    });
+
+    document.getElementById('btnExport').addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.download = 'CYBER_RUNNER_ID.png';
+        a.href = canvas.toDataURL();
+        a.click();
+    });
+
+    document.getElementById('btnRand').addEventListener('click', () => {
+        const hairs = ['twintail', 'shaggy', 'cyberdread', 'clean'];
+        const gears = ['catseye', 'tactical', 'headset', 'none'];
+        const implants = ['neon-blush', 'jaw', 'barcode', 'none'];
+        const jackets = ['bomber', 'collar', 'tactical-vest'];
+        const colors = ['#ff0055', '#00f0ff', '#ffe600', '#a855f7', '#22c55e'];
+
+        state.hair = hairs[Math.floor(Math.random() * hairs.length)];
+        state.gear = gears[Math.floor(Math.random() * gears.length)];
+        state.implant = implants[Math.floor(Math.random() * implants.length)];
+        state.jacket = jackets[Math.floor(Math.random() * jackets.length)];
+        state.hairColor = colors[Math.floor(Math.random() * colors.length)];
+        render();
+    });
+
+    render();
+});
+</script>
 {% endblock %}

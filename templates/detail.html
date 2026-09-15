@@ -1,46 +1,383 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="detail-container">
-    <div class="detail-header">
-        <a href="{{ url_for('index') }}" class="back-link">&larr; BACK TO ARCHIVE</a>
-        <div class="unit-code">{{ unit.id }} // STATUS: {{ unit.status }}</div>
+<style>
+    .game-viewport { max-width: 1300px; margin: 2rem auto 5rem; padding: 0 2rem; }
+    
+    .game-hud {
+        display: flex; justify-content: space-between; align-items: center;
+        background: #0a0c14; border: 1px solid var(--border-pink); padding: 1rem 1.5rem;
+        margin-bottom: 2rem; border-left: 4px solid var(--neon-pink);
+    }
+    .hud-left { display: flex; align-items: center; gap: 15px; }
+    .btn-abort { color: #64748b; text-decoration: none; font-family: 'Orbitron'; font-size: 0.85rem; transition: 0.2s; }
+    .btn-abort:hover { color: var(--neon-pink); }
+    .sector-badge { background: var(--neon-pink); color: #fff; font-family: 'Orbitron'; font-weight: 800; font-size: 0.8rem; padding: 4px 10px; }
+    .hud-timer { font-family: 'Orbitron'; font-size: 1.6rem; font-weight: 900; color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
+
+    .room-stage-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 2.5rem; }
+
+    /* 수색 뷰어 */
+    .interactive-screen { position: relative; height: 520px; background: #000; border: 2px solid var(--border-pink); overflow: hidden; }
+    .interactive-screen img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85); }
+    
+    .clue-pin {
+        position: absolute; width: 38px; height: 38px; border-radius: 50%;
+        background: rgba(255, 0, 85, 0.4); border: 2px solid var(--neon-pink);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-weight: bold; cursor: pointer; animation: pulse 1.5s infinite;
+        font-family: 'Orbitron'; font-size: 1rem;
+    }
+    .clue-pin:hover { transform: scale(1.15); background: var(--neon-pink); color: #fff; box-shadow: 0 0 20px var(--neon-pink); }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.8); }
+        70% { box-shadow: 0 0 0 16px rgba(255, 0, 85, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+    }
+
+    .clue-dialog {
+        position: absolute; bottom: 20px; left: 20px; right: 20px;
+        background: rgba(8, 8, 17, 0.96); border: 2px solid var(--neon-pink);
+        padding: 1.2rem; color: #fff; display: none; z-index: 10;
+        box-shadow: 0 0 25px rgba(255, 0, 85, 0.4);
+    }
+    .clue-dialog h4 { font-family: 'Orbitron'; color: var(--neon-pink); margin-bottom: 0.4rem; font-size: 1.1rem; }
+    .clue-dialog p { font-size: 1rem; color: #cbd5e1; line-height: 1.6; }
+    .btn-close-dialog { position: absolute; top: 10px; right: 15px; background: none; border: none; color: var(--neon-pink); font-size: 1.4rem; cursor: pointer; }
+
+    /* 우측 기믹 패널 */
+    .game-mechanic-panel {
+        background: #0a0c14; border: 1px solid var(--border-pink); padding: 2rem;
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .panel-head h3 { font-family: 'Orbitron'; font-size: 1.3rem; color: var(--neon-pink); margin-bottom: 0.4rem; letter-spacing: 1px; text-shadow: 0 0 10px var(--neon-pink); }
+    .panel-head p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+
+    /* 1번방: 오실로스코프 */
+    .oscillo-box { background: #030308; border: 2px solid var(--border-pink); padding: 1.2rem; text-align: center; margin-bottom: 1.5rem; }
+    #waveCanvas { width: 100%; height: 110px; background: #020205; border: 1px solid #1e293b; margin-bottom: 0.8rem; }
+    .tuner-wave { font-family: 'Orbitron'; font-size: 2.2rem; color: var(--neon-pink); margin-bottom: 0.8rem; text-shadow: 0 0 12px var(--neon-pink); }
+    .tuner-slider { width: 100%; height: 10px; accent-color: var(--neon-pink); cursor: pointer; }
+    .btn-sync-freq {
+        width: 100%; background: var(--neon-pink); color: #fff; border: none; padding: 1rem;
+        font-family: 'Orbitron'; font-weight: 800; cursor: pointer; margin-top: 1rem; box-shadow: 0 0 20px rgba(255, 0, 85, 0.5);
+    }
+
+    /* 2번방: 네온 화학 시약 */
+    .chem-gauge-box { background: #030308; border: 2px solid var(--border-pink); padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+    .chem-meter-wrap {
+        height: 120px; width: 80px; margin: 1rem auto; background: #10121d;
+        border: 2px solid var(--neon-pink); border-radius: 0 0 16px 16px; position: relative; overflow: hidden;
+    }
+    .chem-meter-fill {
+        position: absolute; bottom: 0; left: 0; right: 0; height: 0%;
+        background: linear-gradient(180deg, #ff007f, #ff0055); transition: height 0.4s ease;
+        box-shadow: 0 0 15px var(--neon-pink);
+    }
+    .chem-ratio-text { font-family: 'Orbitron'; font-size: 1.5rem; color: var(--neon-pink); }
+    .chem-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .btn-chem {
+        background: #10121d; border: 1px solid var(--neon-pink); color: var(--neon-pink); padding: 0.9rem;
+        font-family: 'Orbitron'; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    .btn-chem:hover { background: var(--neon-pink); color: #fff; }
+    .btn-vent { width: 100%; background: var(--neon-pink); color: #fff; border: none; padding: 1rem; font-family: 'Orbitron'; font-weight: 800; cursor: pointer; box-shadow: 0 0 15px var(--neon-pink); }
+
+    /* 3번방: 레이저 노드 */
+    .nodes-grid { display: flex; flex-direction: column; gap: 14px; margin-bottom: 1.5rem; }
+    .laser-node-btn {
+        background: #030308; border: 2px solid var(--neon-pink); color: #fff; padding: 1.2rem 1.5rem;
+        font-family: 'Orbitron'; font-size: 1rem; font-weight: bold; cursor: pointer;
+        display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
+    }
+    .laser-node-btn:hover { border-color: #fff; color: #fff; }
+    .laser-node-btn.bypassed { border-color: #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.15); }
+
+    /* 클리어 모달 */
+    .clear-modal {
+        position: fixed; inset: 0; background: rgba(5, 5, 10, 0.95);
+        display: none; justify-content: center; align-items: center; z-index: 2000;
+    }
+    .clear-box {
+        background: #080811; border: 2px solid var(--neon-pink); padding: 3rem;
+        text-align: center; max-width: 500px; box-shadow: 0 0 50px rgba(255, 0, 85, 0.5);
+    }
+    .clear-box h2 { font-family: 'Orbitron'; font-size: 2.2rem; color: var(--neon-pink); margin-bottom: 1rem; text-shadow: 0 0 15px var(--neon-pink); }
+    .clear-box p { color: #cbd5e1; margin-bottom: 2rem; font-size: 1.1rem; }
+    .btn-next-room {
+        background: var(--neon-pink); color: #fff; font-family: 'Orbitron'; font-weight: 800;
+        padding: 1rem 2rem; text-decoration: none; display: inline-block; box-shadow: 0 0 20px var(--neon-pink);
+    }
+</style>
+
+<div class="game-viewport">
+    <div class="game-hud">
+        <div class="hud-left">
+            <a href="{{ url_for('index') }}" class="btn-abort">&larr; ABORT MISSION</a>
+            <span class="sector-badge">{{ room.id }}</span>
+            <span style="font-family:'Orbitron'; color:#fff; font-size:1.1rem;">{{ room.name }}</span>
+        </div>
+        <div>
+            <span style="font-size: 0.85rem; color:#64748b; font-family:'Orbitron'; margin-right: 8px;">OXYGEN TIMER:</span>
+            <span class="hud-timer" id="timerCount">15:00</span>
+        </div>
     </div>
 
-    <div class="detail-grid">
-        <div class="detail-visual">
-            <img src="{{ unit.image }}" 
-                 alt="{{ unit.name }}" 
-                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800&q=80';">
+    <div class="room-stage-grid">
+        <div class="interactive-screen">
+            <img src="{{ room.image }}" alt="{{ room.name }}">
+            <div class="clue-pin" style="top: 30%; left: 25%;" data-idx="0">1</div>
+            <div class="clue-pin" style="top: 60%; left: 65%;" data-idx="1">2</div>
+            <div class="clue-pin" style="top: 25%; left: 75%;" data-idx="2">3</div>
+
+            <div class="clue-dialog" id="clueDialog">
+                <button class="btn-close-dialog" id="closeDialog">&times;</button>
+                <h4 id="dialogTitle">단서</h4>
+                <p id="dialogBody">내용</p>
+            </div>
         </div>
 
-        <div class="detail-info">
-            <span class="unit-category-tag">{{ unit.category }}</span>
-            <h1 class="detail-title">{{ unit.name }}</h1>
-            <p class="detail-desc">{{ unit.desc }}</p>
-
-            <div class="insight-box">
-                <h4>INDUSTRY & MARKET INTELLIGENCE</h4>
-                <p>{{ unit.industry_insight }}</p>
-                <span class="intel-source">Source: {{ unit.source }}</span>
+        <div class="game-mechanic-panel">
+            {% if room.type == 'freq-tuner' %}
+            <div class="panel-head">
+                <h3>FREQUENCY AUDIO TUNER</h3>
+                <p>수색 단서의 공진 주파수(88.5 MHz)에 슬라이더를 맞추고 파형을 동기화하십시오. (챗봇: '1번 힌트')</p>
             </div>
-
-            <div class="spec-table-wrap">
-                <h3>TELEMETRY & HARDWARE SPECS</h3>
-                <table class="spec-table">
-                    {% for key, val in unit.specs.items() %}
-                    <tr>
-                        <th>{{ key }}</th>
-                        <td>{{ val }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
+            <div class="oscillo-box">
+                <canvas id="waveCanvas" width="300" height="90"></canvas>
+                <div class="tuner-wave"><span id="freqValue">70.0</span> MHz</div>
+                <input type="range" min="50.0" max="110.0" step="0.5" value="70.0" class="tuner-slider" id="freqSlider">
+                <button class="btn-sync-freq" id="btnSyncFreq">SYNC FREQUENCY</button>
             </div>
+            <div style="text-align:center; font-family:'Orbitron'; color:var(--neon-pink); font-size:0.9rem;" id="freqStatus">주파수 파형 불일치 (불안정)</div>
 
-            <div class="action-wrap">
-                <button class="btn-primary" onclick="alert('데이터가 브라우저에 캐싱되었습니다.')">EXPORT INTELLIGENCE REPORT</button>
+            {% elif room.type == 'chem-lab' %}
+            <div class="panel-head">
+                <h3>NEUTRALIZATION CHEMICAL FORGE</h3>
+                <p>신경독을 중화하기 위해 시약 A(20%)와 B(20%)를 주입하여 정확히 100% 농도를 채우십시오. (챗봇: '2번 힌트')</p>
             </div>
+            <div class="chem-gauge-box">
+                <div class="chem-ratio-text">NEUTRALIZATION: <span id="chemRatio">0</span>%</div>
+                <div class="chem-meter-wrap">
+                    <div class="chem-meter-fill" id="chemMeterFill"></div>
+                </div>
+            </div>
+            <div class="chem-btn-row">
+                <button class="btn-chem" id="btnAddA">+ INJECT REAGENT A</button>
+                <button class="btn-chem" id="btnAddB">+ INJECT REAGENT B</button>
+            </div>
+            <button class="btn-vent" id="btnVentGas">PURGE & VENT</button>
+            <button class="btn-abort" style="display:block; text-align:center; margin-top:10px; width:100%; border:none; background:none; cursor:pointer;" id="btnResetChem">배합 초기화 (FLUSH)</button>
+
+            {% elif room.type == 'laser-matrix' %}
+            <div class="panel-head">
+                <h3>QUANTUM LASER INTERCEPTOR</h3>
+                <p>단서의 안전 우회 경로에 맞춰 센서 노드를 순서대로 터치하여 차단하십시오. (챗봇: '3번 힌트')</p>
+            </div>
+            <div class="nodes-grid">
+                <button class="laser-node-btn" data-node="ALPHA">
+                    <span>NODE #1 // ALPHA</span>
+                    <span class="node-status">ACTIVE LASER</span>
+                </button>
+                <button class="laser-node-btn" data-node="BETA">
+                    <span>NODE #2 // BETA</span>
+                    <span class="node-status">ACTIVE LASER</span>
+                </button>
+                <button class="laser-node-btn" data-node="GAMMA">
+                    <span>NODE #3 // GAMMA</span>
+                    <span class="node-status">ACTIVE LASER</span>
+                </button>
+            </div>
+            <div style="text-align:center; font-family:'Orbitron'; color:var(--neon-pink); font-size:0.9rem;" id="laserStatus">우회 경로 대기 중...</div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<div class="clear-modal" id="clearModal">
+    <div class="clear-box">
+        <h2>DOOR UNLOCKED!</h2>
+        <p>해당 구역 보안 해제 성공!<br>획득 아이템: <strong style="color:var(--neon-pink);">{{ room.reward_item }}</strong></p>
+        <a href="{{ url_for('index') }}" class="btn-next-room" id="btnNextRoom">RETURN TO BASE &rarr;</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const playBeep = (freq = 440, type = 'sine', duration = 0.1) => {
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e){}
+    };
+
+    const clues = {{ room.clues|tojson }};
+    const clueDialog = document.getElementById('clueDialog');
+    const dialogTitle = document.getElementById('dialogTitle');
+    const dialogBody = document.getElementById('dialogBody');
+    const roomId = "{{ room.id }}";
+
+    document.querySelectorAll('.clue-pin').forEach(pin => {
+        pin.addEventListener('click', () => {
+            playBeep(600, 'triangle', 0.15);
+            const idx = pin.getAttribute('data-idx');
+            dialogTitle.textContent = clues[idx].title;
+            dialogBody.textContent = clues[idx].text;
+            clueDialog.style.display = 'block';
+        });
+    });
+
+    document.getElementById('closeDialog').addEventListener('click', () => {
+        playBeep(300, 'sine', 0.1);
+        clueDialog.style.display = 'none';
+    });
+
+    let sec = 15 * 60;
+    const timerDisplay = document.getElementById('timerCount');
+    setInterval(() => {
+        if (sec > 0) {
+            sec--;
+            const m = String(Math.floor(sec / 60)).padStart(2, '0');
+            const s = String(sec % 60).padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+        }
+    }, 1000);
+
+    const markRoomCleared = () => {
+        playBeep(880, 'square', 0.3);
+        let cleared = JSON.parse(localStorage.getItem('clearedRooms') || '[]');
+        if (!cleared.includes(roomId)) {
+            cleared.push(roomId);
+            localStorage.setItem('clearedRooms', JSON.stringify(cleared));
+        }
+        setTimeout(() => {
+            document.getElementById('clearModal').style.display = 'flex';
+        }, 400);
+    };
+
+    // 1번방: 오실로스코프 파형 튜너
+    const freqSlider = document.getElementById('freqSlider');
+    const waveCanvas = document.getElementById('waveCanvas');
+    if (waveCanvas && freqSlider) {
+        const wCtx = waveCanvas.getContext('2d');
+        let step = 0;
+
+        const drawWave = () => {
+            wCtx.clearRect(0, 0, 300, 90);
+            wCtx.strokeStyle = Math.abs(parseFloat(freqSlider.value) - 88.5) < 0.5 ? '#ff0055' : '#475569';
+            wCtx.lineWidth = 2;
+            wCtx.beginPath();
+            const freqFactor = (parseFloat(freqSlider.value) - 50) * 0.1;
+            for (let x = 0; x < 300; x++) {
+                const y = 45 + Math.sin((x + step) * freqFactor * 0.1) * 25;
+                if (x === 0) wCtx.moveTo(x, y);
+                else wCtx.lineTo(x, y);
+            }
+            wCtx.stroke();
+            step += 2;
+            requestAnimationFrame(drawWave);
+        };
+        drawWave();
+
+        freqSlider.addEventListener('input', (e) => {
+            playBeep(200 + parseFloat(e.target.value) * 5, 'sine', 0.05);
+            document.getElementById('freqValue').textContent = parseFloat(e.target.value).toFixed(1);
+        });
+
+        document.getElementById('btnSyncFreq').addEventListener('click', () => {
+            const val = parseFloat(freqSlider.value);
+            if (val === 88.5) {
+                document.getElementById('freqStatus').textContent = '✔ 주파수 동기화 성공! 격벽 개방';
+                document.getElementById('freqStatus').style.color = '#ff0055';
+                markRoomCleared();
+            } else {
+                playBeep(150, 'sawtooth', 0.2);
+                document.getElementById('freqStatus').textContent = `❌ 신호 간섭 (${val} MHz) - 정확한 파형을 맞추십시오!`;
+            }
+        });
+    }
+
+    // 2번방: 시약 챔버
+    const chemRatio = document.getElementById('chemRatio');
+    const chemMeterFill = document.getElementById('chemMeterFill');
+    let currentChem = 0;
+
+    const updateChemUI = () => {
+        chemRatio.textContent = currentChem;
+        chemMeterFill.style.height = `${Math.min(currentChem, 100)}%`;
+        if (currentChem === 100) chemMeterFill.style.background = '#22c55e';
+        else if (currentChem > 100) chemMeterFill.style.background = '#ff0055';
+        else chemMeterFill.style.background = 'linear-gradient(180deg, #ff007f, #ff0055)';
+    };
+
+    const btnAddA = document.getElementById('btnAddA');
+    if (btnAddA) {
+        btnAddA.addEventListener('click', () => { playBeep(520, 'sine', 0.1); currentChem += 20; updateChemUI(); });
+        document.getElementById('btnAddB').addEventListener('click', () => { playBeep(640, 'sine', 0.1); currentChem += 20; updateChemUI(); });
+        document.getElementById('btnResetChem').addEventListener('click', () => { playBeep(200, 'sawtooth', 0.1); currentChem = 0; updateChemUI(); });
+
+        document.getElementById('btnVentGas').addEventListener('click', () => {
+            if (currentChem === 100) {
+                markRoomCleared();
+            } else if (currentChem > 100) {
+                playBeep(120, 'sawtooth', 0.3);
+                alert('❌ 시약 과부하 폭발! 배합이 초기화됩니다.');
+                currentChem = 0;
+                updateChemUI();
+            } else {
+                playBeep(220, 'sine', 0.15);
+                alert(`⚠️ 중화도 부족 (${currentChem}%)! 100%를 채우십시오.`);
+            }
+        });
+    }
+
+    // 3번방: 레이저 노드
+    const laserBtns = document.querySelectorAll('.laser-node-btn');
+    if (laserBtns.length > 0) {
+        let seq = [];
+        const laserStatus = document.getElementById('laserStatus');
+
+        laserBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const node = btn.getAttribute('data-node');
+                if (seq.includes(node)) return;
+
+                playBeep(480 + seq.length * 150, 'triangle', 0.15);
+                seq.push(node);
+                btn.classList.add('bypassed');
+                btn.querySelector('.node-status').textContent = 'BYPASSED ✔';
+
+                if (seq.length === 3) {
+                    if (seq[0] === 'ALPHA' && seq[1] === 'GAMMA' && seq[2] === 'BETA') {
+                        laserStatus.textContent = '✔ 레이저망 무력화 성공! 금고 개방';
+                        laserStatus.style.color = '#ff0055';
+                        markRoomCleared();
+                    } else {
+                        playBeep(100, 'sawtooth', 0.3);
+                        laserStatus.textContent = '❌ 간섭 발생! 경보 발령 & 리셋';
+                        laserStatus.style.color = '#ff0055';
+                        setTimeout(() => {
+                            seq = [];
+                            laserBtns.forEach(b => {
+                                b.classList.remove('bypassed');
+                                b.querySelector('.node-status').textContent = 'ACTIVE LASER';
+                            });
+                            laserStatus.textContent = '다시 시도하십시오';
+                        }, 1200);
+                    }
+                }
+            });
+        });
+    }
+});
+</script>
 {% endblock %}
